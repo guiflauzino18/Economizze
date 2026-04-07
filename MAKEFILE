@@ -1,0 +1,79 @@
+# ============================================================
+# Makefile — comandos de banco de dados e migrations
+# ============================================================
+
+# Carrega variáveis de ambiente do .env se existir
+-include .env
+export
+
+# DSN padrão para desenvolvimento local
+DATABASE_URL ?= postgres://finance:finance@localhost:5432/finance_dev?sslmode=disable
+
+# CLI do golang-migrate apontando para nosso diretório
+MIGRATE := migrate -path migrations -database "$(DATABASE_URL)"
+
+.PHONY: db-up db-down db-reset migrate-new migrate-up migrate-down \
+        migrate-status migrate-force migrate-version
+
+# ── Docker ───────────────────────────────────────────────────
+
+# Sobe apenas o PostgreSQL (sem a aplicação)
+db-up:
+	docker compose up -d postgres
+	@echo "⏳ Aguardando PostgreSQL..."
+	@until docker compose exec postgres pg_isready -U finance; do sleep 1; done
+	@echo "✓ PostgreSQL pronto"
+
+# Para o PostgreSQL
+db-down:
+	docker compose stop postgres
+
+# Destrói o banco e recria do zero (use em desenvolvimento)
+db-reset:
+	docker compose down -v postgres
+	$(MAKE) db-up
+	$(MAKE) migrate-up
+
+# ── Migrations ───────────────────────────────────────────────
+
+# Cria novos arquivos de migration
+# Uso: make migrate-new name=add_column_to_accounts
+migrate-new:
+	@test -n "$(name)" || (echo "❌ Uso: make migrate-new name=descricao" && exit 1)
+	migrate create -ext sql -dir migrations -seq $(name)
+	@echo "✓ Criado: migrations/$(shell ls migrations | tail -2 | tr '\n' ' ')"
+
+# Aplica TODAS as migrations pendentes
+migrate-up:
+	@echo "🔄 Aplicando migrations..."
+	$(MIGRATE) up
+	@echo "✓ Migrations aplicadas"
+
+# Aplica N migrations
+# Uso: make migrate-up-n n=2
+migrate-up-n:
+	@test -n "$(n)" || (echo "❌ Uso: make migrate-up-n n=<numero>" && exit 1)
+	$(MIGRATE) up $(n)
+
+# Reverte a última migration
+migrate-down:
+	@echo "⏪ Revertendo última migration..."
+	$(MIGRATE) down 1
+
+# Reverte N migrations
+# Uso: make migrate-down-n n=3
+migrate-down-n:
+	@test -n "$(n)" || (echo "❌ Uso: make migrate-down-n n=<numero>" && exit 1)
+	$(MIGRATE) down $(n)
+
+# Mostra a versão atual do schema
+migrate-version:
+	$(MIGRATE) version
+
+# Força uma versão específica
+# Usar quando o banco ficou em estado "dirty" após falha
+# Uso: make migrate-force v=5
+migrate-force:
+	@test -n "$(v)" || (echo "❌ Uso: make migrate-force v=<versao>" && exit 1)
+	@echo "⚠️  Forçando versão $(v)..."
+	$(MIGRATE) force $(v)

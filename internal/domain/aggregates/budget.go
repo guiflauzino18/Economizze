@@ -11,15 +11,16 @@ import (
 )
 
 type Budget struct {
-	id         uuid.UUID
-	userID     uuid.UUID
-	categoryID uuid.UUID
-	period     vos.Period
-	limit      vos.Money
-	spent      vos.Money
-	events     []events.DomainEvent
-	createdAt  time.Time
-	updatedAt  time.Time
+	id                 uuid.UUID
+	userID             uuid.UUID
+	categoryID         uuid.UUID
+	period             vos.Period
+	limit              vos.Money
+	spent              vos.Money
+	notifyWhenExceeded bool
+	events             []events.DomainEvent
+	createdAt          time.Time
+	updatedAt          time.Time
 }
 
 func NewBudget(userID, categoryID uuid.UUID, period vos.Period, limit vos.Money) (*Budget, error) {
@@ -100,9 +101,36 @@ func (b *Budget) CategoryID() uuid.UUID        { return b.categoryID }
 func (b *Budget) Period() vos.Period           { return b.period }
 func (b *Budget) Limit() vos.Money             { return b.limit }
 func (b *Budget) Spent() vos.Money             { return b.spent }
+func (b *Budget) NotifyWhenExceeded() bool     { return b.notifyWhenExceeded }
 func (b *Budget) Events() []events.DomainEvent { return b.events }
 func (b *Budget) ClearEvents()                 { b.events = nil }
+func (b *Budget) CreatedAt() time.Time         { return b.createdAt }
+func (b *Budget) UpdatedAt() time.Time         { return b.updatedAt }
 
 func (b *Budget) addEvent(e events.DomainEvent) {
 	b.events = append(b.events, e)
+}
+
+func ReconstructBudget(
+	id uuid.UUID,
+	userID uuid.UUID,
+	categoryID uuid.UUID,
+	period vos.Period,
+	limit vos.Money,
+	spent vos.Money,
+	notifyWhenExceeded bool,
+	createdAt time.Time,
+	updatedAt time.Time,
+) *Budget {
+	return &Budget{
+		id:                 id,
+		userID:             userID,
+		categoryID:         categoryID,
+		period:             period,
+		limit:              limit,
+		spent:              spent,
+		notifyWhenExceeded: notifyWhenExceeded,
+		createdAt:          createdAt,
+		updatedAt:          updatedAt,
+	}
 }

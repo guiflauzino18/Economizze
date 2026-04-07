@@ -11,5 +11,5 @@ type AccountRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*aggregates.Account, error)
 	FindByUserID(ctx context.Context, userID uuid.UUID) ([]*aggregates.Account, error)
 	Save(ctx context.Context, account *aggregates.Account) error
-	Delete(ctx context.Context, id uuid.UUID)
+	Delete(ctx context.Context, id uuid.UUID) error
 }

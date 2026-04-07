@@ -33,6 +33,7 @@ type Account struct {
 	balance     vos.Money
 	currency    string
 	active      bool
+	isDefault   bool
 	createdAt   time.Time
 	updatedAt   time.Time
 	events      []events.DomainEvent
@@ -81,4 +82,34 @@ func NewAccount(userID uuid.UUID, name string, accountType AccountType, initialB
 func (a *Account) Credit() (*entities.Transaction, error) {
 
 	return nil, nil
+}
+
+func (a *Account) ID() uuid.UUID                { return a.id }
+func (a *Account) UserID() uuid.UUID            { return a.userID }
+func (a *Account) Name() string                 { return a.name }
+func (a *Account) AccountType() AccountType     { return a.accountType }
+func (a *Account) Balance() vos.Money           { return a.balance }
+func (a *Account) Currency() string             { return a.currency }
+func (a *Account) IsActive() bool               { return a.active }
+func (a *Account) IsDefault() bool              { return a.isDefault }
+func (a *Account) CreatedAt() time.Time         { return a.createdAt }
+func (a *Account) UpdatedAt() time.Time         { return a.updatedAt }
+func (a *Account) Events() []events.DomainEvent { return a.events }
+
+// ReconstructAccount reconstrói um Account a partir de dados persistidos.
+// NÃO executa validações — use apenas ao carregar do banco.
+// Isso é o padrão "reconstitution" do DDD: recriar o aggregate sem passar pelas regras de criação (que já foram validadas antes).
+func ReconstructAccount(id uuid.UUID, userID uuid.UUID, name string, accountType AccountType, balance vos.Money, isDefault bool, active bool, createdAt time.Time, updatedAt time.Time) *Account {
+	return &Account{
+		id:          id,
+		userID:      userID,
+		name:        name,
+		accountType: accountType,
+		balance:     balance,
+		currency:    balance.Currency(),
+		isDefault:   isDefault,
+		active:      active,
+		createdAt:   createdAt,
+		updatedAt:   updatedAt,
+	}
 }
