@@ -151,3 +151,31 @@ func modelToBudget(m BudgetModel) (*aggregates.Budget, error) {
 	), nil
 
 }
+
+// ============================================================
+// Category converters
+// ============================================================
+
+func CategoryToModel(c *entities.Category) CategoryModel {
+	return CategoryModel{
+		ID:          c.ID(),
+		UserID:      c.UserID(),
+		Name:        c.Name(),
+		DefaultType: string(c.DefaultType()),
+		Active:      c.IsActive(),
+		CreatedAt:   c.CreatedAt(),
+		UpdatedAt:   c.UpdatedAt(),
+	}
+}
+
+func modelToCategory(c CategoryModel) *entities.Category {
+	return entities.ReconstructCategory(
+		c.ID,
+		c.UserID,
+		c.Name,
+		entities.TransactionType(c.DefaultType),
+		c.Active,
+		c.CreatedAt,
+		c.UpdatedAt,
+	)
+}

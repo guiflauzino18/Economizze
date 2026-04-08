@@ -10,7 +10,7 @@ import (
 
 type BudgetRepository interface {
 	FindByID(ctx context.Context, id uuid.UUID) (*aggregates.Budget, error)
-	FindByUserAndPeriod(ctx context.Context, userID uuid.UUID, period vos.Period)
+	FindByUserAndPeriod(ctx context.Context, userID uuid.UUID, period vos.Period) ([]*aggregates.Budget, error)
 	Save(ctx context.Context, budget *aggregates.Budget) error
-	Delete(ctx context.Context, id uuid.UUID) error
+	UpdateSpent(ctx context.Context, budgetID uuid.UUID, spentCents int64) error
 }

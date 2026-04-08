@@ -49,13 +49,13 @@ func (AccountModel) TableName() string { return "accounts" }
 // ============================================================
 
 type CategoryModel struct {
-	ID          uuid.UUID  `gorm:"type:uuid;primaryKey"`
-	UserID      *uuid.UUID `gorm:"type:uuid;index"`
-	Name        string     `gorm:"not null;size:100"`
-	DefaultType *string    `gorm:"column:default_type;size:20"`
-	Active      bool       `gorm:"not null;default:true"`
-	CreatedAt   time.Time  `gorm:"not null"`
-	UpdatedAt   time.Time  `gorm:"not null"`
+	ID          uuid.UUID `gorm:"type:uuid;primaryKey"`
+	UserID      uuid.UUID `gorm:"type:uuid;index"`
+	Name        string    `gorm:"not null;size:100"`
+	DefaultType string    `gorm:"column:default_type;size:20"`
+	Active      bool      `gorm:"not null;default:true"`
+	CreatedAt   time.Time `gorm:"not null"`
+	UpdatedAt   time.Time `gorm:"not null"`
 }
 
 func (CategoryModel) Tablename() string { return "categories" }
