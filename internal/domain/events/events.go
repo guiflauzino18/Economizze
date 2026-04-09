@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/guiflauzino18/economizze/internal/domain/entities"
 	"github.com/guiflauzino18/economizze/internal/domain/vos"
 )
 
@@ -23,6 +24,7 @@ type TransactionCreated struct {
 	TransactionID uuid.UUID
 	AccountID     uuid.UUID
 	Amount        vos.Money
+	Type          entities.TransactionType
 	CategoryID    *uuid.UUID
 	Description   string
 	OccurredOn    time.Time

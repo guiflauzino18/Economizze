@@ -72,6 +72,11 @@ func (t *Transaction) CreatedAt() time.Time       { return t.createdAt }
 func (t *Transaction) UpdatedAt() time.Time       { return t.updatedAt }
 func (t *Transaction) NotesPtr() *string          { return &t.notes }
 
+// setters
+func (t *Transaction) SetAmount(a vos.Money) {
+	t.amount = a
+}
+
 func ReconstructTransaction(id uuid.UUID, accountID uuid.UUID, categoryID *uuid.UUID, transferPeerID *uuid.UUID, amount vos.Money, txType TransactionType, description string, notes *string, occurredOn time.Time, recurringID *uuid.UUID, createdAt time.Time, updatedAt time.Time) *Transaction {
 	t := &Transaction{
 		id:             id,

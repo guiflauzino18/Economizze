@@ -50,7 +50,7 @@ func (m Money) Sub(other Money) (Money, error) {
 	return Money{cents: m.cents - other.cents, currency: m.currency}, nil
 }
 
-// Abs retorna valor positivo
+// Abs retorna Money negativo
 func (m Money) Abs() Money {
 	if m.cents < 0 {
 		return Money{cents: -m.cents, currency: m.currency}

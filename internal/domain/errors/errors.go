@@ -12,12 +12,12 @@ type ValidationError struct {
 
 // Erros de Dominio
 var (
-	ErrNotFound           = errors.New("not found")
-	ErrConflict           = errors.New("conflict")
-	ErrUnauthorized       = errors.New("unauthorized")
-	ErrForbidden          = errors.New("forbidden")
-	ErrInvalidOperation   = errors.New("invalid operation")
-	ErrInsufficientFounds = errors.New("insufficient founds")
+	ErrNotFound          = errors.New("not found")
+	ErrConflict          = errors.New("conflict")
+	ErrUnauthorized      = errors.New("unauthorized")
+	ErrForbidden         = errors.New("forbidden")
+	ErrInvalidOperation  = errors.New("invalid operation")
+	ErrInsufficientFunds = errors.New("insufficient founds")
 )
 
 // Sobrescreve método Error
