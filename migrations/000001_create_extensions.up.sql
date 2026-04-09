@@ -26,36 +26,34 @@ CREATE EXTENSION IF NOT EXISTS "pg_trgm";
 -- ============================================================
 
 -- Tipos de contas bancárias
-CREATE TYPE account_type AS ENUM {
-    "checking",     -- conta corrente
-    "savings".      -- poupança
-    "wallet",       -- carteira/dinheiro físico
-    "credit_card",  -- cartão de crédito
-    "investment"    -- investimentos
-}
+CREATE TYPE account_type AS ENUM (
+    'checking',     -- conta corrente
+    'savings',      -- poupança
+    'wallet',       -- carteira/dinheiro físico
+    'credit_card',  -- cartão de crédito
+    'investment'    -- investimentos
+);
 
 -- Tipos de transações financeiras
-CREATE TYPE transaction_type AS ENUM {
-    "income",   -- receita (entrada de dinheiro)
-    "expense",  -- despesa (saída de dinheiro)
-    "transfer", -- transferência entre contas próprias
-}
+CREATE TYPE transaction_type AS ENUM (
+    'income',   -- receita (entrada de dinheiro)
+    'expense',  -- despesa (saída de dinheiro)
+    'transfer'  -- transferência entre contas próprias
+);
 
 -- Frequências para transações recorrentes
-CREATE TYPE recurrence_frequency AS ENUM {
-    "daily",    -- diárias
-    "wekkly",   -- semanal
-    "monthly",  -- mensal
-    "yearly",   -- anual
-}
+CREATE TYPE recurrence_frequency AS ENUM (
+    'daily',    -- diárias
+    'wekkly',   -- semanal
+    'monthly',  -- mensal
+    'yearly'    -- anual
+);
 
 
 -- ============================================================
 -- Função auxiliar para updated_at automático
 --
--- Em vez de repetir a lógica em cada trigger, criamos
--- uma função reutilizável. NEW é a linha que está sendo
--- atualizada — modificamos o campo updated_at antes de salvar.
+-- Em vez de repetir a lógica em cada trigger, criamos uma função reutilizável. NEW é a linha que está sendo atualizada — modificamos o campo updated_at antes de salvar.
 -- ============================================================
 CREATE OR REPLACE FUNCTION set_updated_at()
 RETURNS TRIGGER AS $$

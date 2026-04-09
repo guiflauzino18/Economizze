@@ -1,9 +1,9 @@
 package database
 
 import (
-	"embed"
 	"errors"
 	"fmt"
+	"io/fs"
 	"time"
 
 	"github.com/golang-migrate/migrate/v4"
@@ -13,9 +13,6 @@ import (
 	gormpg "gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
-
-//go:embed migrations/*.sql
-var migrationsFS embed.FS
 
 // Config centraliza todas as configurações do banco
 type Config struct {
@@ -79,7 +76,7 @@ func NewGorm(cfg Config) (*gorm.DB, error) {
 }
 
 // RunMigrations executa todas as migrations pendentes.
-func RunMigrations(db *gorm.DB) error {
+func RunMigrations(db *gorm.DB, migrationFS fs.FS) error {
 	// Obtém *sql.DB para usar com golang-migrate
 	sqlDB, err := db.DB()
 	if err != nil {
@@ -88,7 +85,8 @@ func RunMigrations(db *gorm.DB) error {
 
 	// Cria o source de migrations a partir do filesystem embutido
 	// "migrations" é o diretório dentro do embed.FS
-	source, err := iofs.New(migrationsFS, "migrations")
+	source, err := iofs.New(migrationFS, "migrations")
+
 	if err != nil {
 		return fmt.Errorf("RunMigrations.source: %w", err)
 	}

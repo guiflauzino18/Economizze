@@ -78,6 +78,14 @@ func NewAccount(userID uuid.UUID, name string, accountType AccountType, initialB
 	}, nil
 }
 
+func (a *Account) UnsetDefault() {
+	a.isDefault = false
+}
+
+func (a *Account) ClearEvents() {
+	a.events = []events.DomainEvent{}
+}
+
 // Credit aumenta o saldo da conta (receita)
 func (a *Account) Credit() (*entities.Transaction, error) {
 

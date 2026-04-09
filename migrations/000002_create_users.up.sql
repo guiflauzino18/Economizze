@@ -10,16 +10,16 @@ CREATE TABLE users (
     name VARCHAR(100) NOT NULL,
     email CITEXT NOT NULL, --     -- CITEXT: comparações case-insensitive sem LOWER() nas queries. Ex: "ANA@EMAIL.COM" e "ana@email.com" serão tratados como iguais
     password_hash VARCHAR(255) NOT NULL,
-    role VARCHAR(20) NOT NTLL DEFAULT 'user' CHECK (role IN ('user', 'admin')), -- Apenas admins podem ver dados de outros usuários
+    role VARCHAR(20) NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'admin')), -- Apenas admins podem ver dados de outros usuários
     active BOOLEAN NOT NULL DEFAULT TRUE, -- Soft Delete
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
     --Constraint nomeada: mensagem de erro mais clara em conflito
-    CONSTRAINT users_email_unique UNIQUE (email);
+    CONSTRAINT users_email_unique UNIQUE(email)
 
     -- Nome com mínimo de 2 caractéres
-    CONSTRAINT users_name_lenght CHECK (LENGHT(name) >= 2);
+    CONSTRAINT users_name_length CHECK (LENGTH(name) >= 2)
 );
 
 -- Trigger para atualizar updated_at automaticamente em qualquer UPDATE
@@ -42,7 +42,7 @@ CREATE TABLE users_social_accounts (
     provider_id VARCHAR(255) NOT NULL, -- ID único do usuário dentro do provider
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT social_provider_unique UNIQUE (provider, provider_id) -- Um usuário não pode vincular a mesma conta do mesmo provider duas vezes
+    CONSTRAINT social_provider_unique UNIQUE(provider, provider_id) -- Um usuário não pode vincular a mesma conta do mesmo provider duas vezes
 
 );
 
