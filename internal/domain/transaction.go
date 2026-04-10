@@ -2,13 +2,12 @@
 * Transaction é a entidade que representa cada transação realizada
  */
 
-package entities
+package domain
 
 import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/guiflauzino18/economizze/internal/domain/vos"
 )
 
 type TransactionType string
@@ -22,7 +21,7 @@ const (
 type Transaction struct {
 	id             uuid.UUID
 	accountID      uuid.UUID
-	amount         vos.Money // positivo = receita, negativo = despesa
+	amount         Money // positivo = receita, negativo = despesa
 	txType         TransactionType
 	description    string
 	categoryID     *uuid.UUID
@@ -35,7 +34,7 @@ type Transaction struct {
 }
 
 // NewTransaction cria uma nova transação
-func NewTransaction(accountID uuid.UUID, amount vos.Money, txType TransactionType, description string, categoryID *uuid.UUID, occurredOn time.Time) *Transaction {
+func NewTransaction(accountID uuid.UUID, amount Money, txType TransactionType, description string, categoryID *uuid.UUID, occurredOn time.Time) *Transaction {
 	return &Transaction{
 		id:          uuid.New(),
 		accountID:   accountID,
@@ -61,7 +60,7 @@ func (t *Transaction) Categorize(categoryID uuid.UUID) {
 // getters
 func (t *Transaction) ID() uuid.UUID              { return t.id }
 func (t *Transaction) AccountID() uuid.UUID       { return t.accountID }
-func (t *Transaction) Amount() vos.Money          { return t.amount }
+func (t *Transaction) Amount() Money              { return t.amount }
 func (t *Transaction) Type() TransactionType      { return t.txType }
 func (t *Transaction) Description() string        { return t.description }
 func (t *Transaction) CategoryID() *uuid.UUID     { return t.categoryID }
@@ -73,11 +72,11 @@ func (t *Transaction) UpdatedAt() time.Time       { return t.updatedAt }
 func (t *Transaction) NotesPtr() *string          { return &t.notes }
 
 // setters
-func (t *Transaction) SetAmount(a vos.Money) {
+func (t *Transaction) SetAmount(a Money) {
 	t.amount = a
 }
 
-func ReconstructTransaction(id uuid.UUID, accountID uuid.UUID, categoryID *uuid.UUID, transferPeerID *uuid.UUID, amount vos.Money, txType TransactionType, description string, notes *string, occurredOn time.Time, recurringID *uuid.UUID, createdAt time.Time, updatedAt time.Time) *Transaction {
+func ReconstructTransaction(id uuid.UUID, accountID uuid.UUID, categoryID *uuid.UUID, transferPeerID *uuid.UUID, amount Money, txType TransactionType, description string, notes *string, occurredOn time.Time, recurringID *uuid.UUID, createdAt time.Time, updatedAt time.Time) *Transaction {
 	t := &Transaction{
 		id:             id,
 		accountID:      accountID,

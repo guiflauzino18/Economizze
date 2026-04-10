@@ -8,22 +8,21 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/guiflauzino18/economizze/internal/domain/aggregates"
-	"github.com/guiflauzino18/economizze/internal/domain/vos"
+	"github.com/guiflauzino18/economizze/internal/domain"
 	"github.com/guiflauzino18/economizze/internal/ports"
 )
 
 type CreateAccountInput struct {
 	userID         uuid.UUID // extraído do token JWT
 	Name           string
-	AccountType    aggregates.AccountType
+	AccountType    domain.AccountType
 	InitialBalance int64
 	Currency       string
 	IsDefault      bool
 }
 
 type CreateAccountOutput struct {
-	Account aggregates.Account
+	Account domain.Account
 }
 
 type CreateAccountUseCase struct {
@@ -52,12 +51,12 @@ func (uc *CreateAccountUseCase) Execute(ctx context.Context, in CreateAccountInp
 	}
 
 	// Cria initialBalance via NewMoeny
-	initialBalance, err := vos.NewMoney(in.InitialBalance, in.Currency)
+	initialBalance, err := domain.NewMoney(in.InitialBalance, in.Currency)
 	if err != nil {
 		return nil, fmt.Errorf("CreateAccount.NewMoney: %w", err)
 	}
 
-	account, err := aggregates.NewAccount(in.userID, in.Name, in.AccountType, initialBalance)
+	account, err := domain.NewAccount(in.userID, in.Name, in.AccountType, initialBalance)
 	if err != nil {
 		return nil, fmt.Errorf("CreateAccount.NewAccount: %e", err)
 	}

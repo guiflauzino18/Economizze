@@ -6,8 +6,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/guiflauzino18/economizze/internal/domain/entities"
-	errorsDomain "github.com/guiflauzino18/economizze/internal/domain/errors"
+	"github.com/guiflauzino18/economizze/internal/domain"
 	"github.com/guiflauzino18/economizze/internal/ports"
 	"gorm.io/gorm"
 )
@@ -23,7 +22,7 @@ func NewCategoryRepository(db *gorm.DB) ports.CategoryRepository {
 }
 
 // FindAvailableForUser implements [ports.CategoryRepository].
-func (c categoryRepository) FindAvailableForUser(ctx context.Context, userID uuid.UUID) ([]*entities.Category, error) {
+func (c categoryRepository) FindAvailableForUser(ctx context.Context, userID uuid.UUID) ([]*domain.Category, error) {
 	var models []CategoryModel
 
 	err := c.db.WithContext(ctx).
@@ -35,7 +34,7 @@ func (c categoryRepository) FindAvailableForUser(ctx context.Context, userID uui
 		return nil, fmt.Errorf("categoryRepository.FindAvailableForUser: %w", err)
 	}
 
-	categories := make([]*entities.Category, 0, len(models))
+	categories := make([]*domain.Category, 0, len(models))
 
 	for _, m := range models {
 		category := modelToCategory(m)
@@ -47,7 +46,7 @@ func (c categoryRepository) FindAvailableForUser(ctx context.Context, userID uui
 }
 
 // FindByID implements [ports.CategoryRepository].
-func (c categoryRepository) FindByID(ctx context.Context, id uuid.UUID) (*entities.Category, error) {
+func (c categoryRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Category, error) {
 	var model CategoryModel
 
 	err := c.db.WithContext(ctx).
@@ -55,7 +54,7 @@ func (c categoryRepository) FindByID(ctx context.Context, id uuid.UUID) (*entiti
 		First(&model).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, fmt.Errorf("categoryRepository.FindByID %s: %w", id, errorsDomain.ErrNotFound)
+		return nil, fmt.Errorf("categoryRepository.FindByID %s: %w", id, domain.ErrNotFound)
 	}
 
 	if err != nil {
@@ -66,7 +65,7 @@ func (c categoryRepository) FindByID(ctx context.Context, id uuid.UUID) (*entiti
 }
 
 // Save implements [ports.CategoryRepository].
-func (c categoryRepository) Save(ctx context.Context, cat *entities.Category) error {
+func (c categoryRepository) Save(ctx context.Context, cat *domain.Category) error {
 
 	model := CategoryToModel(cat)
 

@@ -1,10 +1,9 @@
-package entities
+package domain
 
 import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/guiflauzino18/economizze/internal/domain/errors"
 )
 
 type Category struct {
@@ -20,7 +19,7 @@ type Category struct {
 func NewCategory(usreID uuid.UUID, name string, typeTx TransactionType) (*Category, error) {
 
 	if len(name) < 2 {
-		return nil, errors.NewValidationError("name", "must be at least 2 characters")
+		return nil, NewValidationError("name", "must be at least 2 characters")
 	}
 
 	return &Category{

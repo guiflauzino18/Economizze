@@ -1,13 +1,11 @@
 /*
 * money é um value object que representa valor monetário com valor e moeda.
  */
-package vos
+package domain
 
 import (
 	"fmt"
 	"strings"
-
-	"github.com/guiflauzino18/economizze/internal/domain/errors"
 )
 
 type Money struct {
@@ -21,7 +19,7 @@ func NewMoney(cents int64, currency string) (Money, error) {
 	currency = strings.ToUpper(strings.TrimSpace(currency))
 
 	if len(currency) != 3 {
-		return Money{}, errors.NewValidationError("currency", "must be a 3 letter ISO 4217")
+		return Money{}, NewValidationError("currency", "must be a 3 letter ISO 4217")
 	}
 
 	return Money{cents: cents, currency: currency}, nil
@@ -78,7 +76,7 @@ func (m Money) GreaterThan(other Money) bool {
 // CheckSameCurrency verifica se moeda são iguais
 func (m Money) checkSameCurrency(other Money) error {
 	if m.currency != other.currency {
-		return errors.NewValidationError("currency", fmt.Sprintf("cannot operate on different currencies: %s and %s", m.currency, other.currency))
+		return NewValidationError("currency", fmt.Sprintf("cannot operate on different currencies: %s and %s", m.currency, other.currency))
 	}
 
 	return nil

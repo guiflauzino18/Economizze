@@ -2,7 +2,7 @@
 * account é um aggregate root responsável por criar e controlar contas
  */
 
-package aggregates
+package domain
 
 import (
 	"fmt"
@@ -10,10 +10,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/guiflauzino18/economizze/internal/domain/entities"
-	"github.com/guiflauzino18/economizze/internal/domain/errors"
-	"github.com/guiflauzino18/economizze/internal/domain/events"
-	"github.com/guiflauzino18/economizze/internal/domain/vos"
 )
 
 type AccountType string
@@ -31,25 +27,25 @@ type Account struct {
 	userID      uuid.UUID
 	name        string
 	accountType AccountType
-	balance     vos.Money
+	balance     Money
 	currency    string
 	active      bool
 	isDefault   bool
 	createdAt   time.Time
 	updatedAt   time.Time
-	events      []events.DomainEvent
+	events      []DomainEvent
 }
 
 // NewAccount cria uma nova conta
-func NewAccount(userID uuid.UUID, name string, accountType AccountType, initialBalance vos.Money) (*Account, error) {
+func NewAccount(userID uuid.UUID, name string, accountType AccountType, initialBalance Money) (*Account, error) {
 
 	if userID == uuid.Nil {
-		return nil, errors.NewValidationError("user_id", "required")
+		return nil, NewValidationError("user_id", "required")
 	}
 
 	name = strings.TrimSpace(name)
 	if len(name) < 2 || len(name) > 100 {
-		return nil, errors.NewValidationError("name", "must be between 2 and 100 charactes")
+		return nil, NewValidationError("name", "must be between 2 and 100 charactes")
 	}
 
 	validTypes := map[AccountType]bool{
@@ -61,7 +57,7 @@ func NewAccount(userID uuid.UUID, name string, accountType AccountType, initialB
 	}
 
 	if !validTypes[accountType] {
-		return nil, errors.NewValidationError("type", "invalid account type")
+		return nil, NewValidationError("type", "invalid account type")
 	}
 
 	now := time.Now().UTC()
@@ -84,11 +80,11 @@ func (a *Account) UnsetDefault() {
 }
 
 func (a *Account) ClearEvents() {
-	a.events = []events.DomainEvent{}
+	a.events = []DomainEvent{}
 }
 
 // Credit aumenta o saldo da conta (receita)
-func (a *Account) Credit(amount vos.Money, description string, categoryID *uuid.UUID, occurred_on time.Time) (*entities.Transaction, error) {
+func (a *Account) Credit(amount Money, description string, categoryID *uuid.UUID, occurred_on time.Time) (*Transaction, error) {
 
 	if err := a.checkActive(); err != nil {
 		return nil, err
@@ -99,7 +95,7 @@ func (a *Account) Credit(amount vos.Money, description string, categoryID *uuid.
 	}
 
 	if amount.IsNegative() || amount.IsZero() {
-		return nil, errors.NewValidationError("amount", "must be positive for credit")
+		return nil, NewValidationError("amount", "must be positive for credit")
 	}
 
 	oldBalance := a.balance
@@ -108,21 +104,21 @@ func (a *Account) Credit(amount vos.Money, description string, categoryID *uuid.
 		return nil, fmt.Errorf("Account.Credit: %w", err)
 	}
 
-	tx := entities.NewTransaction(a.id, amount, entities.TransactionTypeIncome, description, categoryID, occurred_on)
+	tx := NewTransaction(a.id, amount, TransactionTypeIncome, description, categoryID, occurred_on)
 	a.balance = newBalance
 	a.updatedAt = time.Now().UTC()
 
-	a.addEvent(events.TransactionCreated{
+	a.addEvent(TransactionCreated{
 		TransactionID: tx.ID(),
 		AccountID:     a.id,
 		Amount:        amount,
-		Type:          entities.TransactionTypeExpense,
+		Type:          TransactionTypeExpense,
 		CategoryID:    categoryID,
 		Description:   description,
 		OccurredOn:    occurred_on,
 	})
 
-	a.addEvent(events.AccountBalanceUpdated{
+	a.addEvent(AccountBalanceUpdated{
 		AccountID:  a.id,
 		OldBalance: oldBalance,
 		NewBalance: newBalance,
@@ -133,7 +129,7 @@ func (a *Account) Credit(amount vos.Money, description string, categoryID *uuid.
 
 }
 
-func (a *Account) Debit(amount vos.Money, description string, categoryID *uuid.UUID, occurredOn time.Time) (*entities.Transaction, error) {
+func (a *Account) Debit(amount Money, description string, categoryID *uuid.UUID, occurredOn time.Time) (*Transaction, error) {
 	if err := a.checkActive(); err != nil {
 		return nil, err
 	}
@@ -143,7 +139,7 @@ func (a *Account) Debit(amount vos.Money, description string, categoryID *uuid.U
 	}
 
 	if amount.IsNegative() || amount.IsZero() {
-		return nil, errors.NewValidationError("amount", "must be positive for debit")
+		return nil, NewValidationError("amount", "must be positive for debit")
 	}
 
 	// Conta corrente e poupança não permitem saldo positivo
@@ -151,7 +147,7 @@ func (a *Account) Debit(amount vos.Money, description string, categoryID *uuid.U
 		available := a.balance
 
 		if amount.GreaterThan(available) {
-			return nil, fmt.Errorf("account %s: %w", a.id, errors.ErrInsufficientFunds)
+			return nil, fmt.Errorf("account %s: %w", a.id, ErrInsufficientFunds)
 		}
 	}
 
@@ -161,10 +157,10 @@ func (a *Account) Debit(amount vos.Money, description string, categoryID *uuid.U
 		return nil, fmt.Errorf("Account.Debit: %w", err)
 	}
 
-	tx := entities.NewTransaction(a.id, amount.Abs(), entities.TransactionTypeExpense, description, categoryID, occurredOn)
+	tx := NewTransaction(a.id, amount.Abs(), TransactionTypeExpense, description, categoryID, occurredOn)
 
 	//despesa é armazenada como negativo
-	negAmount, err := vos.NewMoney(-amount.Cents(), amount.Currency())
+	negAmount, err := NewMoney(-amount.Cents(), amount.Currency())
 	if err != nil {
 		return nil, err
 	}
@@ -173,17 +169,17 @@ func (a *Account) Debit(amount vos.Money, description string, categoryID *uuid.U
 	a.balance = newBalance
 	a.updatedAt = time.Now().UTC()
 
-	a.addEvent(events.TransactionCreated{
+	a.addEvent(TransactionCreated{
 		TransactionID: tx.ID(),
 		AccountID:     a.id,
 		Amount:        amount,
-		Type:          entities.TransactionTypeExpense,
+		Type:          TransactionTypeExpense,
 		CategoryID:    categoryID,
 		Description:   description,
 		OccurredOn:    occurredOn,
 	})
 
-	a.addEvent(events.AccountBalanceUpdated{
+	a.addEvent(AccountBalanceUpdated{
 		AccountID:  a.id,
 		OldBalance: oldBalance,
 		NewBalance: newBalance,
@@ -197,7 +193,7 @@ func (a *Account) Debit(amount vos.Money, description string, categoryID *uuid.U
 func (a *Account) Rename(name string) error {
 	name = strings.TrimSpace(name)
 	if len(name) < 2 || len(name) > 100 {
-		return errors.NewValidationError("name", "must be between 2 ans 100 characters")
+		return NewValidationError("name", "must be between 2 ans 100 characters")
 	}
 
 	a.name = name
@@ -207,7 +203,7 @@ func (a *Account) Rename(name string) error {
 
 func (a *Account) Deactivate() error {
 	if !a.IsActive() {
-		return fmt.Errorf("account already inactive: %w", errors.ErrInvalidOperation)
+		return fmt.Errorf("account already inactive: %w", ErrInvalidOperation)
 	}
 
 	a.active = false
@@ -216,13 +212,13 @@ func (a *Account) Deactivate() error {
 	return nil
 }
 
-func (a *Account) addEvent(e events.DomainEvent) {
+func (a *Account) addEvent(e DomainEvent) {
 	a.events = append(a.events, e)
 }
 
-func (a *Account) checkCurrency(m vos.Money) error {
+func (a *Account) checkCurrency(m Money) error {
 	if m.Currency() != a.currency {
-		return errors.NewValidationError("currency", fmt.Sprintf("account currency is %s, got %s", a.currency, m.Currency()))
+		return NewValidationError("currency", fmt.Sprintf("account currency is %s, got %s", a.currency, m.Currency()))
 	}
 
 	return nil
@@ -230,7 +226,7 @@ func (a *Account) checkCurrency(m vos.Money) error {
 
 func (a *Account) checkActive() error {
 	if !a.active {
-		return fmt.Errorf("account %s is inactive: %w", a.id, errors.ErrInvalidOperation)
+		return fmt.Errorf("account %s is inactive: %w", a.id, ErrInvalidOperation)
 	}
 
 	return nil
@@ -240,22 +236,22 @@ func (a *Account) SetDefaultAccount() {
 	a.isDefault = true
 }
 
-func (a *Account) ID() uuid.UUID                { return a.id }
-func (a *Account) UserID() uuid.UUID            { return a.userID }
-func (a *Account) Name() string                 { return a.name }
-func (a *Account) AccountType() AccountType     { return a.accountType }
-func (a *Account) Balance() vos.Money           { return a.balance }
-func (a *Account) Currency() string             { return a.currency }
-func (a *Account) IsActive() bool               { return a.active }
-func (a *Account) IsDefault() bool              { return a.isDefault }
-func (a *Account) CreatedAt() time.Time         { return a.createdAt }
-func (a *Account) UpdatedAt() time.Time         { return a.updatedAt }
-func (a *Account) Events() []events.DomainEvent { return a.events }
+func (a *Account) ID() uuid.UUID            { return a.id }
+func (a *Account) UserID() uuid.UUID        { return a.userID }
+func (a *Account) Name() string             { return a.name }
+func (a *Account) AccountType() AccountType { return a.accountType }
+func (a *Account) Balance() Money           { return a.balance }
+func (a *Account) Currency() string         { return a.currency }
+func (a *Account) IsActive() bool           { return a.active }
+func (a *Account) IsDefault() bool          { return a.isDefault }
+func (a *Account) CreatedAt() time.Time     { return a.createdAt }
+func (a *Account) UpdatedAt() time.Time     { return a.updatedAt }
+func (a *Account) Events() []DomainEvent    { return a.events }
 
 // ReconstructAccount reconstrói um Account a partir de dados persistidos.
 // NÃO executa validações — use apenas ao carregar do banco.
 // Isso é o padrão "reconstitution" do DDD: recriar o aggregate sem passar pelas regras de criação (que já foram validadas antes).
-func ReconstructAccount(id uuid.UUID, userID uuid.UUID, name string, accountType AccountType, balance vos.Money, isDefault bool, active bool, createdAt time.Time, updatedAt time.Time) *Account {
+func ReconstructAccount(id uuid.UUID, userID uuid.UUID, name string, accountType AccountType, balance Money, isDefault bool, active bool, createdAt time.Time, updatedAt time.Time) *Account {
 	return &Account{
 		id:          id,
 		userID:      userID,

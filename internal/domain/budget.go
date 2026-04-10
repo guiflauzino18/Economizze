@@ -1,42 +1,39 @@
-package aggregates
+package domain
 
 import (
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/guiflauzino18/economizze/internal/domain/errors"
-	"github.com/guiflauzino18/economizze/internal/domain/events"
-	"github.com/guiflauzino18/economizze/internal/domain/vos"
 )
 
 type Budget struct {
 	id                 uuid.UUID
 	userID             uuid.UUID
 	categoryID         uuid.UUID
-	period             vos.Period
-	limit              vos.Money
-	spent              vos.Money
+	period             Period
+	limit              Money
+	spent              Money
 	notifyWhenExceeded bool
-	events             []events.DomainEvent
+	events             []DomainEvent
 	createdAt          time.Time
 	updatedAt          time.Time
 }
 
-func NewBudget(userID, categoryID uuid.UUID, period vos.Period, limit vos.Money) (*Budget, error) {
+func NewBudget(userID, categoryID uuid.UUID, period Period, limit Money) (*Budget, error) {
 	if userID == uuid.Nil {
-		return nil, errors.NewValidationError("user_id", "required")
+		return nil, NewValidationError("user_id", "required")
 	}
 
 	if categoryID == uuid.Nil {
-		return nil, errors.NewValidationError("category_id", "required")
+		return nil, NewValidationError("category_id", "required")
 	}
 
 	if !limit.IsPositive() {
-		return nil, errors.NewValidationError("limit", "must be positive")
+		return nil, NewValidationError("limit", "must be positive")
 	}
 
-	zero, _ := vos.NewMoney(0, limit.Currency())
+	zero, _ := NewMoney(0, limit.Currency())
 	now := time.Now().UTC()
 
 	return &Budget{
@@ -53,13 +50,13 @@ func NewBudget(userID, categoryID uuid.UUID, period vos.Period, limit vos.Money)
 }
 
 // RegisterSpending - Registra um gasto e verifica se o budget foi excedido
-func (b *Budget) RegisterSpending(amount vos.Money) error {
+func (b *Budget) RegisterSpending(amount Money) error {
 	if amount.Currency() != b.limit.Currency() {
-		return errors.NewValidationError("currency", "currency mismatch")
+		return NewValidationError("currency", "currency mismatch")
 	}
 
 	if !amount.IsPositive() {
-		return errors.NewValidationError("amount", "must be positive")
+		return NewValidationError("amount", "must be positive")
 	}
 
 	newSpent, err := b.spent.Add(amount)
@@ -73,7 +70,7 @@ func (b *Budget) RegisterSpending(amount vos.Money) error {
 
 	// Dispara evento se budget exceeded
 	if wasUnder && b.spent.GreaterThan(b.limit) {
-		b.addEvent(events.BudgetExceeded{
+		b.addEvent(BudgetExceeded{
 			BudgetID:   b.id,
 			CategoryID: b.categoryID,
 			Limit:      b.limit,
@@ -95,19 +92,19 @@ func (b *Budget) PercentUsed() float64 {
 	return float64(b.spent.Cents()) / float64(b.limit.Cents())
 }
 
-func (b *Budget) ID() uuid.UUID                { return b.id }
-func (b *Budget) UserID() uuid.UUID            { return b.userID }
-func (b *Budget) CategoryID() uuid.UUID        { return b.categoryID }
-func (b *Budget) Period() vos.Period           { return b.period }
-func (b *Budget) Limit() vos.Money             { return b.limit }
-func (b *Budget) Spent() vos.Money             { return b.spent }
-func (b *Budget) NotifyWhenExceeded() bool     { return b.notifyWhenExceeded }
-func (b *Budget) Events() []events.DomainEvent { return b.events }
-func (b *Budget) ClearEvents()                 { b.events = nil }
-func (b *Budget) CreatedAt() time.Time         { return b.createdAt }
-func (b *Budget) UpdatedAt() time.Time         { return b.updatedAt }
+func (b *Budget) ID() uuid.UUID            { return b.id }
+func (b *Budget) UserID() uuid.UUID        { return b.userID }
+func (b *Budget) CategoryID() uuid.UUID    { return b.categoryID }
+func (b *Budget) Period() Period           { return b.period }
+func (b *Budget) Limit() Money             { return b.limit }
+func (b *Budget) Spent() Money             { return b.spent }
+func (b *Budget) NotifyWhenExceeded() bool { return b.notifyWhenExceeded }
+func (b *Budget) Events() []DomainEvent    { return b.events }
+func (b *Budget) ClearEvents()             { b.events = nil }
+func (b *Budget) CreatedAt() time.Time     { return b.createdAt }
+func (b *Budget) UpdatedAt() time.Time     { return b.updatedAt }
 
-func (b *Budget) addEvent(e events.DomainEvent) {
+func (b *Budget) addEvent(e DomainEvent) {
 	b.events = append(b.events, e)
 }
 
@@ -115,9 +112,9 @@ func ReconstructBudget(
 	id uuid.UUID,
 	userID uuid.UUID,
 	categoryID uuid.UUID,
-	period vos.Period,
-	limit vos.Money,
-	spent vos.Money,
+	period Period,
+	limit Money,
+	spent Money,
 	notifyWhenExceeded bool,
 	createdAt time.Time,
 	updatedAt time.Time,

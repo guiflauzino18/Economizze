@@ -2,13 +2,11 @@
 * period é um value object que representa inicio e fim de um período.
  */
 
-package vos
+package domain
 
 import (
 	"fmt"
 	"time"
-
-	"github.com/guiflauzino18/economizze/internal/domain/errors"
 )
 
 type Period struct {
@@ -20,15 +18,15 @@ type Period struct {
 func NewPediod(start, end time.Time) (Period, error) {
 
 	if start.IsZero() {
-		return Period{}, errors.NewValidationError("start", "cannot be zero")
+		return Period{}, NewValidationError("start", "cannot be zero")
 	}
 
 	if end.IsZero() {
-		return Period{}, errors.NewValidationError("end", "cannot be zero")
+		return Period{}, NewValidationError("end", "cannot be zero")
 	}
 
 	if !end.After(start) {
-		return Period{}, errors.NewValidationError("end", "must be after start")
+		return Period{}, NewValidationError("end", "must be after start")
 	}
 
 	return Period{

@@ -7,9 +7,7 @@ package repository
 import (
 	"fmt"
 
-	"github.com/guiflauzino18/economizze/internal/domain/aggregates"
-	"github.com/guiflauzino18/economizze/internal/domain/entities"
-	"github.com/guiflauzino18/economizze/internal/domain/vos"
+	"github.com/guiflauzino18/economizze/internal/domain"
 )
 
 // ============================================================
@@ -18,7 +16,7 @@ import (
 
 // accountToModel converte a entidade de domínio para o modelo GORM.
 // Chamado antes de salvar no banco.
-func accountToModel(a aggregates.Account) AccountModel {
+func accountToModel(a domain.Account) AccountModel {
 	return AccountModel{
 		ID:           a.ID(),
 		UserID:       a.UserID(),
@@ -37,19 +35,19 @@ func accountToModel(a aggregates.Account) AccountModel {
 // Chamado após buscar do banco.
 // Usa ReconstructAccount para reconstruir sem passar pelas validações
 // do construtor (o dado já foi validado quando foi salvo).
-func modelToAccount(m AccountModel) (*aggregates.Account, error) {
-	balance, err := vos.NewMoney(m.BalanceCents, m.Currency)
+func modelToAccount(m AccountModel) (*domain.Account, error) {
+	balance, err := domain.NewMoney(m.BalanceCents, m.Currency)
 	if err != nil {
 		return nil, fmt.Errorf("modelToAccount.balance: %w", err)
 	}
 
 	// ReconstructAccount bypassa as validações do NewAccount
 	// porque estamos reconstruindo um dado já válido do banco
-	return aggregates.ReconstructAccount(
+	return domain.ReconstructAccount(
 		m.ID,
 		m.UserID,
 		m.Name,
-		aggregates.AccountType(m.AccountType),
+		domain.AccountType(m.AccountType),
 		balance,
 		m.IsDefault,
 		m.Active,
@@ -62,7 +60,7 @@ func modelToAccount(m AccountModel) (*aggregates.Account, error) {
 // Transaction converters
 // ============================================================
 
-func transactionToModel(t *entities.Transaction) TransactionModel {
+func transactionToModel(t *domain.Transaction) TransactionModel {
 	return TransactionModel{
 		ID:             t.ID(),
 		AccountID:      t.AccountID(),
@@ -80,19 +78,19 @@ func transactionToModel(t *entities.Transaction) TransactionModel {
 	}
 }
 
-func modelToTransaction(m TransactionModel) (*entities.Transaction, error) {
-	amount, err := vos.NewMoney(m.Cents, m.Currency)
+func modelToTransaction(m TransactionModel) (*domain.Transaction, error) {
+	amount, err := domain.NewMoney(m.Cents, m.Currency)
 	if err != nil {
 		return nil, fmt.Errorf("modelToTransaction.amount: %w", err)
 	}
 
-	return entities.ReconstructTransaction(
+	return domain.ReconstructTransaction(
 		m.ID,
 		m.AccountID,
 		m.CategoryID,
 		m.TransferPeerID,
 		amount,
-		entities.TransactionType(m.Type),
+		domain.TransactionType(m.Type),
 		m.Description,
 		m.Notes,
 		m.OccurredOn,
@@ -106,7 +104,7 @@ func modelToTransaction(m TransactionModel) (*entities.Transaction, error) {
 // Budget converters
 // ============================================================
 
-func budgetToModel(b *aggregates.Budget) BudgetModel {
+func budgetToModel(b *domain.Budget) BudgetModel {
 	return BudgetModel{
 		ID:                 b.ID(),
 		UserID:             b.UserID(),
@@ -122,23 +120,23 @@ func budgetToModel(b *aggregates.Budget) BudgetModel {
 	}
 }
 
-func modelToBudget(m BudgetModel) (*aggregates.Budget, error) {
-	limit, err := vos.NewMoney(m.LimitCents, m.Currency)
+func modelToBudget(m BudgetModel) (*domain.Budget, error) {
+	limit, err := domain.NewMoney(m.LimitCents, m.Currency)
 	if err != nil {
 		return nil, fmt.Errorf("modelToBudget.limit: %w", err)
 	}
 
-	spent, err := vos.NewMoney(m.SpentCents, m.Currency)
+	spent, err := domain.NewMoney(m.SpentCents, m.Currency)
 	if err != nil {
 		return nil, fmt.Errorf("modelToBudget.spent: %w", err)
 	}
 
-	period, err := vos.NewPediod(m.PeriodStart, m.PeriodEnd)
+	period, err := domain.NewPediod(m.PeriodStart, m.PeriodEnd)
 	if err != nil {
 		return nil, fmt.Errorf("modelToBudget.period: %w", err)
 	}
 
-	return aggregates.ReconstructBudget(
+	return domain.ReconstructBudget(
 		m.ID,
 		m.UserID,
 		m.CategoryID,
@@ -156,7 +154,7 @@ func modelToBudget(m BudgetModel) (*aggregates.Budget, error) {
 // Category converters
 // ============================================================
 
-func CategoryToModel(c *entities.Category) CategoryModel {
+func CategoryToModel(c *domain.Category) CategoryModel {
 	return CategoryModel{
 		ID:          c.ID(),
 		UserID:      c.UserID(),
@@ -168,12 +166,12 @@ func CategoryToModel(c *entities.Category) CategoryModel {
 	}
 }
 
-func modelToCategory(c CategoryModel) *entities.Category {
-	return entities.ReconstructCategory(
+func modelToCategory(c CategoryModel) *domain.Category {
+	return domain.ReconstructCategory(
 		c.ID,
 		c.UserID,
 		c.Name,
-		entities.TransactionType(c.DefaultType),
+		domain.TransactionType(c.DefaultType),
 		c.Active,
 		c.CreatedAt,
 		c.UpdatedAt,

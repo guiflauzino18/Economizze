@@ -7,9 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/guiflauzino18/economizze/internal/domain/aggregates"
-	domainErrors "github.com/guiflauzino18/economizze/internal/domain/errors"
-	"github.com/guiflauzino18/economizze/internal/domain/vos"
+	"github.com/guiflauzino18/economizze/internal/domain"
 	"github.com/guiflauzino18/economizze/internal/ports"
 	"gorm.io/gorm"
 )
@@ -37,14 +35,14 @@ func (b *budgetRepository) UpdateSpent(ctx context.Context, budgetID uuid.UUID, 
 		})
 
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("budgetRepository.UpdateSpent %s: %w", budgetID, domainErrors.ErrNotFound)
+		return fmt.Errorf("budgetRepository.UpdateSpent %s: %w", budgetID, domain.ErrNotFound)
 	}
 
 	return result.Error
 }
 
 // FindByID implements [ports.BudgetRepository].
-func (b *budgetRepository) FindByID(ctx context.Context, id uuid.UUID) (*aggregates.Budget, error) {
+func (b *budgetRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Budget, error) {
 	var model BudgetModel
 
 	err := b.db.WithContext(ctx).
@@ -52,7 +50,7 @@ func (b *budgetRepository) FindByID(ctx context.Context, id uuid.UUID) (*aggrega
 		First(&model, "id = ?", id).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, fmt.Errorf("budgetRespository.FinByID %s: %w", id, domainErrors.ErrNotFound)
+		return nil, fmt.Errorf("budgetRespository.FinByID %s: %w", id, domain.ErrNotFound)
 	}
 
 	if err != nil {
@@ -63,7 +61,7 @@ func (b *budgetRepository) FindByID(ctx context.Context, id uuid.UUID) (*aggrega
 }
 
 // FindByUserAndPeriod implements [ports.BudgetRepository].
-func (b *budgetRepository) FindByUserAndPeriod(ctx context.Context, userID uuid.UUID, period vos.Period) ([]*aggregates.Budget, error) {
+func (b *budgetRepository) FindByUserAndPeriod(ctx context.Context, userID uuid.UUID, period domain.Period) ([]*domain.Budget, error) {
 	var models []BudgetModel
 
 	err := b.db.WithContext(ctx).
@@ -80,7 +78,7 @@ func (b *budgetRepository) FindByUserAndPeriod(ctx context.Context, userID uuid.
 		return nil, fmt.Errorf("budgetRepository.FindByUserAndPeriod: %w", err)
 	}
 
-	budgets := make([]*aggregates.Budget, 0, len(models))
+	budgets := make([]*domain.Budget, 0, len(models))
 
 	for _, m := range models {
 		budget, err := modelToBudget(m)
@@ -95,7 +93,7 @@ func (b *budgetRepository) FindByUserAndPeriod(ctx context.Context, userID uuid.
 }
 
 // Save implements [ports.BudgetRepository].
-func (b *budgetRepository) Save(ctx context.Context, budget *aggregates.Budget) error {
+func (b *budgetRepository) Save(ctx context.Context, budget *domain.Budget) error {
 	model := budgetToModel(budget)
 
 	if err := b.db.WithContext(ctx).Save(&model).Error; err != nil {

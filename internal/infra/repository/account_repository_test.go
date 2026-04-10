@@ -7,8 +7,7 @@ import (
 	"testing"
 
 	"github.com/google/uuid"
-	"github.com/guiflauzino18/economizze/internal/domain/aggregates"
-	"github.com/guiflauzino18/economizze/internal/domain/vos"
+	"github.com/guiflauzino18/economizze/internal/domain"
 	"github.com/guiflauzino18/economizze/internal/infra/database"
 	"github.com/guiflauzino18/economizze/internal/infra/repository"
 	"github.com/stretchr/testify/assert"
@@ -35,11 +34,11 @@ func TestAccountRepository_Integration(t *testing.T) {
 	t.Run("salva e recupera conta", func(t *testing.T) {
 
 		// Cria balance
-		balance, err := vos.NewMoney(150000, "BRL")
+		balance, err := domain.NewMoney(150000, "BRL")
 		require.NoError(t, err)
 
 		// Cria account
-		account, err := aggregates.NewAccount(userID, "Conta Corrente Itaú", aggregates.AccountTypeChecking, balance)
+		account, err := domain.NewAccount(userID, "Conta Corrente Itaú", domain.AccountTypeChecking, balance)
 		require.NoError(t, err)
 
 		// SAlva no banco

@@ -5,8 +5,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/guiflauzino18/economizze/internal/domain/aggregates"
-	domainErrors "github.com/guiflauzino18/economizze/internal/domain/errors"
+	"github.com/guiflauzino18/economizze/internal/domain"
 	"github.com/guiflauzino18/economizze/internal/ports"
 )
 
@@ -25,7 +24,7 @@ func NewupdateAccountUseCase(accountRepo ports.AccountRepository) *UpdateAccount
 	return &UpdateAccountUseCase{accountRepo}
 }
 
-func (uc *UpdateAccountUseCase) Execute(ctx context.Context, in UpdateAccountInput) (*aggregates.Account, error) {
+func (uc *UpdateAccountUseCase) Execute(ctx context.Context, in UpdateAccountInput) (*domain.Account, error) {
 
 	account, err := uc.accountRepo.FindByID(ctx, in.AccountID)
 	if err != nil {
@@ -34,7 +33,7 @@ func (uc *UpdateAccountUseCase) Execute(ctx context.Context, in UpdateAccountInp
 
 	// Verifica se a conta pertence ao usuário
 	if account.UserID() != in.userID {
-		return nil, fmt.Errorf("UpdateAccount: account %s: %w", in.AccountID, domainErrors.ErrForbidden)
+		return nil, fmt.Errorf("UpdateAccount: account %s: %w", in.AccountID, domain.ErrForbidden)
 	}
 
 	// Partial Update = aplica apenas os campos fornecidos

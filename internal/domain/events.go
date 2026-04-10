@@ -2,14 +2,12 @@
 * events disparam eventos quando realizado alguma ação.
  */
 
-package events
+package domain
 
 import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/guiflauzino18/economizze/internal/domain/entities"
-	"github.com/guiflauzino18/economizze/internal/domain/vos"
 )
 
 // DomainEvent é um contrato base
@@ -23,8 +21,8 @@ type DomainEvent interface {
 type TransactionCreated struct {
 	TransactionID uuid.UUID
 	AccountID     uuid.UUID
-	Amount        vos.Money
-	Type          entities.TransactionType
+	Amount        Money
+	Type          TransactionType
 	CategoryID    *uuid.UUID
 	Description   string
 	OccurredOn    time.Time
@@ -45,8 +43,8 @@ func (e TransactionCreated) AggregateID() uuid.UUID {
 // AccountBalanceUpdated - disparado quando o saldo muda
 type AccountBalanceUpdated struct {
 	AccountID  uuid.UUID
-	OldBalance vos.Money
-	NewBalance vos.Money
+	OldBalance Money
+	NewBalance Money
 	OccurredOn time.Time
 }
 
@@ -66,8 +64,8 @@ func (e AccountBalanceUpdated) AggregateID() uuid.UUID {
 type BudgetExceeded struct {
 	BudgetID   uuid.UUID
 	CategoryID uuid.UUID
-	Limit      vos.Money
-	Spent      vos.Money
+	Limit      Money
+	Spent      Money
 	OccurredOn time.Time
 }
 

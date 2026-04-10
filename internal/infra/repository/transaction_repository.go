@@ -6,8 +6,7 @@ import (
 	"fmt"
 
 	"github.com/google/uuid"
-	"github.com/guiflauzino18/economizze/internal/domain/entities"
-	domainErrors "github.com/guiflauzino18/economizze/internal/domain/errors"
+	"github.com/guiflauzino18/economizze/internal/domain"
 	"github.com/guiflauzino18/economizze/internal/ports"
 	"gorm.io/gorm"
 )
@@ -26,14 +25,14 @@ func NewTransactionRepository(db *gorm.DB) ports.TransactionRepository {
 func (t *transactionRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	result := t.db.WithContext(ctx).Delete(&TransactionModel{}, "id = ?", id)
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("transactionRepository.Delete %s: %w", id, domainErrors.ErrNotFound)
+		return fmt.Errorf("transactionRepository.Delete %s: %w", id, domain.ErrNotFound)
 	}
 
 	return result.Error
 }
 
 // FindAll implements [ports.TransactionRepository].
-func (t *transactionRepository) FindAll(ctx context.Context, filter ports.TransactionFilter) ([]*entities.Transaction, int64, error) {
+func (t *transactionRepository) FindAll(ctx context.Context, filter ports.TransactionFilter) ([]*domain.Transaction, int64, error) {
 	var models []TransactionModel
 
 	var total int64
@@ -85,7 +84,7 @@ func (t *transactionRepository) FindAll(ctx context.Context, filter ports.Transa
 		return nil, 0, fmt.Errorf("transactionRepository.FindAll.find: %w", err)
 	}
 
-	transactions := make([]*entities.Transaction, 0, len(models))
+	transactions := make([]*domain.Transaction, 0, len(models))
 
 	for _, m := range models {
 		tx, err := modelToTransaction(m)
@@ -101,7 +100,7 @@ func (t *transactionRepository) FindAll(ctx context.Context, filter ports.Transa
 }
 
 // FindByID implements [ports.TransactionRepository].
-func (t *transactionRepository) FindByID(ctx context.Context, id uuid.UUID) (*entities.Transaction, error) {
+func (t *transactionRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Transaction, error) {
 	var model TransactionModel
 
 	err := t.db.WithContext(ctx).
@@ -109,7 +108,7 @@ func (t *transactionRepository) FindByID(ctx context.Context, id uuid.UUID) (*en
 		First(&model, "id = ?", id).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, fmt.Errorf("transactionRepository.FindByID %s: %w", id, domainErrors.ErrNotFound)
+		return nil, fmt.Errorf("transactionRepository.FindByID %s: %w", id, domain.ErrNotFound)
 	}
 
 	if err != nil {
@@ -120,7 +119,7 @@ func (t *transactionRepository) FindByID(ctx context.Context, id uuid.UUID) (*en
 }
 
 // Save implements [ports.TransactionRepository].
-func (t *transactionRepository) Save(ctx context.Context, tx *entities.Transaction) error {
+func (t *transactionRepository) Save(ctx context.Context, tx *domain.Transaction) error {
 	model := transactionToModel(tx)
 
 	err := t.db.WithContext(ctx).Save(&model).Error

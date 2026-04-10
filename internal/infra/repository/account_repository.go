@@ -7,8 +7,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/guiflauzino18/economizze/internal/domain/aggregates"
-	domainErrors "github.com/guiflauzino18/economizze/internal/domain/errors"
+	"github.com/guiflauzino18/economizze/internal/domain"
 	"github.com/guiflauzino18/economizze/internal/ports"
 	"gorm.io/gorm"
 )
@@ -39,14 +38,14 @@ func (a *accountRepository) Delete(ctx context.Context, id uuid.UUID) error {
 
 	// Se 0 então não encontrou o ID
 	if result.RowsAffected == 0 {
-		return fmt.Errorf("accountRepository.Delete %s: %w", id, domainErrors.ErrNotFound)
+		return fmt.Errorf("accountRepository.Delete %s: %w", id, domain.ErrNotFound)
 	}
 
 	return nil
 }
 
 // FindByID implements [ports.AccountRepository].
-func (a *accountRepository) FindByID(ctx context.Context, id uuid.UUID) (*aggregates.Account, error) {
+func (a *accountRepository) FindByID(ctx context.Context, id uuid.UUID) (*domain.Account, error) {
 	var model AccountModel
 
 	err := a.db.WithContext(ctx).
@@ -54,7 +53,7 @@ func (a *accountRepository) FindByID(ctx context.Context, id uuid.UUID) (*aggreg
 		First(&model).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, fmt.Errorf("accountRepository.FindByID %s: %w", id, domainErrors.ErrNotFound)
+		return nil, fmt.Errorf("accountRepository.FindByID %s: %w", id, domain.ErrNotFound)
 	}
 
 	if err != nil {
@@ -70,7 +69,7 @@ func (a *accountRepository) FindByID(ctx context.Context, id uuid.UUID) (*aggreg
 }
 
 // FindByUserID implements [ports.AccountRepository].
-func (a *accountRepository) FindByUserID(ctx context.Context, userID uuid.UUID) ([]*aggregates.Account, error) {
+func (a *accountRepository) FindByUserID(ctx context.Context, userID uuid.UUID) ([]*domain.Account, error) {
 	var models []AccountModel
 
 	err := a.db.WithContext(ctx).Where("user_id = ? AND active = true", userID).
@@ -81,7 +80,7 @@ func (a *accountRepository) FindByUserID(ctx context.Context, userID uuid.UUID) 
 		return nil, fmt.Errorf("accountRepository.FindByUserID %s: %w", userID, err)
 	}
 
-	accounts := make([]*aggregates.Account, 0, len(models))
+	accounts := make([]*domain.Account, 0, len(models))
 
 	for _, m := range models {
 		a, err := modelToAccount(m)
@@ -97,7 +96,7 @@ func (a *accountRepository) FindByUserID(ctx context.Context, userID uuid.UUID) 
 }
 
 // Save implements [ports.AccountRepository].
-func (a *accountRepository) Save(ctx context.Context, account *aggregates.Account) error {
+func (a *accountRepository) Save(ctx context.Context, account *domain.Account) error {
 	model := accountToModel(*account)
 
 	// Save faz INSERT ou UPDATE automaticamente baseado na PK:
