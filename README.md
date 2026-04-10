@@ -84,9 +84,7 @@ O projeto segue **Clean Architecture** combinada com **DDD (Domain-Driven Design
 
 ```
 finance-api/
-├── cmd/
-│   └── api/
-│       └── main.go               # bootstrap: DI manual, server, graceful shutdown
+|
 │
 ├── internal/
 │   ├── domain/                   # DDD: núcleo do negócio (zero dependências externas)
@@ -159,6 +157,7 @@ finance-api/
 │   └── otel-collector.yaml
 │
 ├── docker-compose.yml
+├── main.go               # bootstrap: DI manual, server, graceful shutdown
 ├── docker-compose.observability.yml
 ├── Makefile
 ├── .env.example
@@ -276,7 +275,7 @@ make migrate-version
 make migrate-force v=5
 ```
 
-As migrations ficam em `migrations/` na raiz do projeto. O binário as embute via `//go:embed` no `cmd/api/main.go`, portanto não é necessário montar volumes em produção.
+As migrations ficam em `migrations/` na raiz do projeto. O binário as embute via `//go:embed` no `main.go`, portanto não é necessário montar volumes em produção.
 
 ---
 
@@ -286,11 +285,11 @@ As migrations ficam em `migrations/` na raiz do projeto. O binário as embute vi
 # Servidor
 APP_ENV=development          # development | production
 APP_PORT=8080
-APP_NAME=finance-api
+APP_NAME=economizze-api
 APP_VERSION=1.0.0
 
 # Banco de dados
-DATABASE_URL=postgres://finance:finance@localhost:5432/finance_dev?sslmode=disable
+DATABASE_URL=postgres://economizze:economizze@localhost:5432/economizze_dev?sslmode=disable
 DB_MAX_OPEN_CONNS=25
 DB_MAX_IDLE_CONNS=10
 
@@ -340,7 +339,7 @@ TRACE_SAMPLE_RATE=0.1        # 10% das requisições em produção
 | GET    | `/api/v1/accounts`         | Lista todas as contas do usuário   |
 | POST   | `/api/v1/accounts`         | Cria nova conta                    |
 | GET    | `/api/v1/accounts/:id`     | Detalhes de uma conta              |
-| PUT    | `/api/v1/accounts/:id`     | Atualiza nome, cor ou padrão       |
+| PUT    | `/api/v1/accounts/:id`     | Atualiza nome  ou padrão           |
 | DELETE | `/api/v1/accounts/:id`     | Desativa a conta                   |
 
 ### Transações
